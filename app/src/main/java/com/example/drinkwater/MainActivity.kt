@@ -27,15 +27,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.work.WorkManager
 import com.example.drinkwater.ui.theme.BluePrimary
 import com.example.drinkwater.ui.theme.BlueSecondary
 import com.example.drinkwater.ui.theme.DrinkWaterTheme
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +51,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DrinkWaterTheme {
-                DrinkWater {  }
+                val context = LocalContext.current
+                DrinkWater {
+
+                    val workManager = WorkManager.getInstance(context)
+                    val constraints = Constraints.Builder()//.setRequiredNetworkType(NetworkType.CONNECTED)
+                    val repeatingRequest = PeriodicWorkRequestBuilder<NotificationWorker>(30,
+                        TimeUnit.SECONDS).build()//.setConstrains(
+                    val workId = UUID.randomUUID().toString()
+
+                    workManager.enqueueUniquePeriodicWork(workId, ExistingPeriodicWorkPolicy.KEEP, repeatingRequest)
+                }
             }
         }
     }
