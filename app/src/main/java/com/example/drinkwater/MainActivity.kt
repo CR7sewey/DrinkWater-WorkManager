@@ -52,12 +52,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             DrinkWaterTheme {
                 val context = LocalContext.current
-                DrinkWater {
+
+                DrinkWater { text ->
 
                     val workManager = WorkManager.getInstance(context)
-                    val constraints = Constraints.Builder()//.setRequiredNetworkType(NetworkType.CONNECTED)
-                    val repeatingRequest = PeriodicWorkRequestBuilder<NotificationWorker>(30,
-                        TimeUnit.SECONDS).build()//.setConstrains(
+                    val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+                    var interval: Long
+                    try {
+                        interval = text.text.toLong()
+                    }
+                    catch (e: NumberFormatException) {
+                        interval = 15
+                    }
+
+                    val repeatingRequest = PeriodicWorkRequestBuilder<NotificationWorker>(interval,
+                        TimeUnit.SECONDS).setConstraints(constraints).build()//.setConstrains(
                     val workId = UUID.randomUUID().toString()
 
                     workManager.enqueueUniquePeriodicWork(workId, ExistingPeriodicWorkPolicy.KEEP, repeatingRequest)
@@ -69,7 +78,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DrinkWater(onClick: () -> Unit) {
+fun DrinkWater(onClick: (text: TextFieldValue) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -100,7 +109,7 @@ fun DrinkWater(onClick: () -> Unit) {
 }
 
 @Composable
-fun NotificationContent(onClick: () -> Unit) {
+fun NotificationContent(onClick: (text: TextFieldValue) -> Unit) {
     val intervalState = remember { mutableStateOf(TextFieldValue()) }
 
     Column(
@@ -133,7 +142,7 @@ fun NotificationContent(onClick: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = BluePrimary),
-            onClick = { onClick() },
+            onClick = { onClick(intervalState.value) },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(text = "More Water")
